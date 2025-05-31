@@ -56,7 +56,9 @@ const Index = () => {
   const [algorithm, setAlgorithm] = useState<Algorithm>("dijkstra");
   const [isRunning, setIsRunning] = useState(false);
   const [speed, setSpeed] = useState([50]);
-  const [drawMode, setDrawMode] = useState<"wall" | "start" | "end">("wall");
+  const [drawMode, setDrawMode] = useState<"wall" | "start" | "end" | "erase">(
+    "wall"
+  );
   const [stats, setStats] = useState({ visited: 0, pathLength: 0, time: 0 });
   const [isSolved, setIsSolved] = useState(false);
 
@@ -162,16 +164,22 @@ const Index = () => {
         const newGrid = [...prevGrid];
         const node = newGrid[row][col];
 
+        const notStartOrEnd = !node.isStart && !node.isEnd;
+
         if (drawMode === "start") {
+          if (node.isEnd) return newGrid;
           newGrid.forEach((r) => r.forEach((n) => (n.isStart = false)));
           node.isStart = true;
           node.isWall = false;
         } else if (drawMode === "end") {
+          if (node.isStart) return newGrid;
           newGrid.forEach((r) => r.forEach((n) => (n.isEnd = false)));
           node.isEnd = true;
           node.isWall = false;
-        } else if (drawMode === "wall" && !node.isStart && !node.isEnd) {
+        } else if (drawMode === "wall" && notStartOrEnd) {
           node.isWall = !node.isWall;
+        } else if (drawMode === "erase" && notStartOrEnd && node.isWall) {
+          node.isWall = false;
         }
 
         if (isSolved) recalculatePath(newGrid);
@@ -197,13 +205,15 @@ const Index = () => {
 
       if (drawMode === "wall") {
         setGrid((prevGrid) => {
-          const newGrid = [...prevGrid];
-          const node = newGrid[row][col];
-          if (!node.isStart && !node.isEnd) {
-            node.isWall = true;
+          const newGrid = prevGrid.map((rowArr, rIdx) =>
+            rowArr.map((node, cIdx) =>
+              rIdx === row && cIdx === col && !node.isStart && !node.isEnd
+                ? { ...node, isWall: true }
+                : node
+            )
+          );
 
-            if (isSolved) recalculatePath(newGrid);
-          }
+          if (isSolved) recalculatePath(newGrid);
           return newGrid;
         });
       }
@@ -334,6 +344,12 @@ const Index = () => {
                       className="text-white focus:text-white hover:bg-slate-700 focus:bg-slate-700"
                     >
                       Place End
+                    </SelectItem>
+                    <SelectItem
+                      value="erase"
+                      className="text-white focus:text-white hover:bg-slate-700 focus:bg-slate-700"
+                    >
+                      Erase Walls
                     </SelectItem>
                   </SelectContent>
                 </Select>

@@ -53,6 +53,8 @@ const Grid: React.FC<GridProps> = ({
                 onMouseDown={() => onMouseDown(node.row, node.col)}
                 onMouseEnter={() => onMouseEnter(node.row, node.col)}
                 onMouseUp={onMouseUp}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
               />
             ))}
           </div>
